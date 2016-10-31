@@ -1,20 +1,22 @@
 //GROWBOX library, includes all necessery classes. By Vincent Gosselin
+
+//This File should copied to Documents/Arduino/Libraries/GROWBOX1/GROWBOX1.h for changes to happen in the Arduino.
 #ifndef GROWBOX1_h 
 #define GROWBOX1_h
 
 #include "Arduino.h"
 #include "dht.h"
 
-class digital_pin
+class Digital_pin
 {
 	public:
-		digital_pin(int pin);
+		Digital_pin(int pin);
 		bool get_state();
-		void setinput();
-		void setoutput();
+		void set_input();
+		void set_output();
 		void high();
 		void low();
-		void blink(unsigned long ms);
+		void blink();
 		void init();
 		bool read_input();
 	private:
@@ -67,7 +69,7 @@ class LED
 		int get_pinconfig();
 		void init();//Init.
 	private:
-		digital_pin *_pin;//digital_pin object.
+		Digital_pin *_pin;//Digital_pin object.
 		timer *_timer_18h_on;//timer object.
 		timer *_timer_6h_off;//timer object.
 		timer *_timer_12h_on;//timer object.
@@ -88,7 +90,7 @@ class BULB
 		int get_pinconfig();
 		void init();//Init mofooo.
 	private:
-		digital_pin *_pin;//digital_pin object.
+		Digital_pin *_pin;//Digital_pin object.
 		timer *_timer_on_for;//timer object.
 		bool _status;
 		bool _done;	
@@ -107,7 +109,7 @@ class FAN
 		int get_pinconfig();
 		void init();
 	private:
-		digital_pin *_pin;//digital_pin object.
+		Digital_pin *_pin;//Digital_pin object.
 		timer *_timer_on_for;//timer object.
 		bool _status;		
 		bool _done;
@@ -125,7 +127,7 @@ class VALVE
 		int get_pinconfig();
 		void init();
 	private:
-		digital_pin *_pin;//digital_pin object.
+		Digital_pin *_pin;//Digital_pin object.
 		timer *_timer_on_for;//timer object.
 		bool _status;		
 		bool _done;	
@@ -149,16 +151,16 @@ class FRONT_PANEL
 		//Leds on front panel.
 		void FAN_led_on();
 		void FAN_led_off();
-		void FAN_led_blink(unsigned long ms);
+		void FAN_led_blink();
 		void LED_led_on();
 		void LED_led_off();
-		void LED_led_blink(unsigned long ms);
+		void LED_led_blink();
 		void BULB_led_on();
 		void BULB_led_off();
-		void BULB_led_blink(unsigned long ms);
+		void BULB_led_blink();
 		void VALVE_led_on();
 		void VALVE_led_off();
-		void VALVE_led_blink(unsigned long ms);
+		void VALVE_led_blink();
 
 		void Germination_mode();
 		void Vegetation_mode();
@@ -194,27 +196,27 @@ class FRONT_PANEL
 
 	private:
 		/* Front panel leds*/
-		digital_pin *_led1;//digital_pin object. Please see Front panel Image for pin Assignation.
-		digital_pin *_led2;//digital_pin object.
-		digital_pin *_led3;//digital_pin object.
-		digital_pin *_led4;//digital_pin object.
-		digital_pin *_led5;//digital_pin object.
-		digital_pin *_led6;//digital_pin object.
-		digital_pin *_led7;//digital_pin object.
-		digital_pin *_led8;//digital_pin object.
-		digital_pin *_led9;//digital_pin object.
-		digital_pin *_led10;//digital_pin object.
-		digital_pin *_led11;//digital_pin object.
-		digital_pin *_led12;//digital_pin object.
-		digital_pin *_led13;//digital_pin object.
+		Digital_pin *_led1;//Digital_pin object. Please see Front panel Image for pin Assignation.
+		Digital_pin *_led2;//Digital_pin object.
+		Digital_pin *_led3;//Digital_pin object.
+		Digital_pin *_led4;//Digital_pin object.
+		Digital_pin *_led5;//Digital_pin object.
+		Digital_pin *_led6;//Digital_pin object.
+		Digital_pin *_led7;//Digital_pin object.
+		Digital_pin *_led8;//Digital_pin object.
+		Digital_pin *_led9;//Digital_pin object.
+		Digital_pin *_led10;//Digital_pin object.
+		Digital_pin *_led11;//Digital_pin object.
+		Digital_pin *_led12;//Digital_pin object.
+		Digital_pin *_led13;//Digital_pin object.
 		/*Front panel Switchs*/
-		digital_pin *_switch1;//digital_pin object.
-		digital_pin *_switch2;//digital_pin object.
-		digital_pin *_switch3a;//digital_pin object.
-		digital_pin *_switch3b;//digital_pin object.
-		digital_pin *_switch4;//digital_pin object.
-		digital_pin *_switch5;//digital_pin object.
-		digital_pin *_pushbutton1;//digital_pin object.
+		Digital_pin *_switch1;//Digital_pin object.
+		Digital_pin *_switch2;//Digital_pin object.
+		Digital_pin *_switch3a;//Digital_pin object.
+		Digital_pin *_switch3b;//Digital_pin object.
+		Digital_pin *_switch4;//Digital_pin object.
+		Digital_pin *_switch5;//Digital_pin object.
+		Digital_pin *_pushbutton1;//Digital_pin object.
 		//Switch register.
 		char _switch_register;//Holds Switch states on front panel. On 8bit (last unsused). (sw1,sw2,sw3a,sw3b,sw4,sw5,pb1, X) 
 		int _lcd_serial_port;//0,1,2,3. Serials port on Arduino Due.
@@ -237,7 +239,7 @@ class SENSORS
 		analog_pin *_soil_moisture_sensor;
 		DHT *_temp_humidity_sensor;
 		analog_pin *_door_sensor;
-		digital_pin *_reservoir_sensor;
+		Digital_pin *_reservoir_sensor;
 
 		int _soil_moisture;
 		float _temperature;
@@ -275,15 +277,3 @@ class SERVER
 };
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-

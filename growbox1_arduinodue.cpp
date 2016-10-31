@@ -1,6 +1,7 @@
 #include <GROWBOX1.h>
 //DHT11 ARM lib https://github.com/adafruit/DHT-sensor-library/blob/master/examples/DHTtester/DHTtester.ino
 
+//Debuging Sessions 31st of October 2016
 
 //Growbox1_arduinodue Software by Vincent Gosselin
 //Block schematic : 1. INIT.
@@ -19,7 +20,7 @@ BULB BULB(7);//PIN7
 FAN FAN_INTAKE(9);//Pin 9.
 FAN FAN_OUTTAKE(10);//PIN 10
 VALVE VALVE(8);//PIN 8
-digital_pin Pin4(4);
+Digital_pin * pin24 = new Digital_pin(24);//Pin 24, USB status.
 // //Front panel, inclues door led.
 FRONT_PANEL FRONT_PANEL(/* Front panel leds*/
 					50, 48, 44, 42, 40, 38, 
@@ -48,6 +49,7 @@ void orders();
 void setup()
 {
 	initiate();
+	
 }
 void loop()
 {	
@@ -57,6 +59,7 @@ void loop()
 	display_front_panel();
 	scan_switch();
 	orders();
+	pin24->blink();
 }
 
 void initiate()
@@ -72,7 +75,7 @@ void initiate()
 	FAN_OUTTAKE.init();
 	VALVE.init();
 
-	FRONT_PANEL.display_welcome();
+	//FRONT_PANEL.display_welcome();
 	
 }
 void scan_sensors()
@@ -162,24 +165,3 @@ void orders()
 	}
 	else VALVE.close();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
