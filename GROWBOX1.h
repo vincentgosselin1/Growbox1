@@ -13,6 +13,7 @@ class Digital_pin
 		Digital_pin(int pin);
 		bool get_state();
 		void set_input();
+		void set_input_pullup();
 		void set_output();
 		void high();
 		void low();
@@ -65,15 +66,21 @@ class LED
 		void on();//command to turn on LED.
 		void on_18h_off_6h();//ON for 18 hours, OFF for 6 hours.
 		void on_12h_off_12h();//ON for 12 hours, OFF for 12 hours.
+
+		void on_1min_off_1min();//On for 1 min, off 1min. FOR TESTS
+
 		bool get_status();//to check LED is on or off :).
 		int get_pinconfig();
 		void init();//Init.
+		void toggle();//ON->OFF,OFF->ON.
 	private:
 		Digital_pin *_pin;//Digital_pin object.
 		timer *_timer_18h_on;//timer object.
 		timer *_timer_6h_off;//timer object.
 		timer *_timer_12h_on;//timer object.
 		timer *_timer_12h_off;//timer object.
+		timer *_timer_1min_on;//timer tests
+		timer *_timer_1min_off;
 		bool _status;
 		int _pinconfig;//On what pin is LED.
 

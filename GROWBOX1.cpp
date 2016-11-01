@@ -19,6 +19,10 @@ void Digital_pin::set_input()
 {
 	pinMode(_pin,INPUT);
 }
+void Digital_pin::set_input_pullup()
+{
+	pinMode(_pin,INPUT_PULLUP);
+}
 void Digital_pin::set_output()
 {
 	pinMode(_pin,OUTPUT);
@@ -53,6 +57,7 @@ bool Digital_pin::read_input()
 {
 	bool state;
 	state = digitalRead(_pin);
+	_state = state;
 	return state;
 }
 analog_pin::analog_pin(int pin)
@@ -80,11 +85,10 @@ timer::timer(const char * array)
 //Reset timer at init.	
 	reset();//Reset timer at init.
 // Init array
-	_countarray = new char[13];	
+	_countarray = new char[12];	
 	for(int i=0; i<12; i++)
 	{
 		_countarray[i] = '0';
-		_countarray[i+1] = '\0';//Ending string with NUL char.
 	}
 }
 
@@ -207,8 +211,7 @@ void timer::run()
 }
 void timer::serialprint()
 {
-	Serial.print(get_count_string());
-	Serial.print("\r\n");
+	Serial.println(get_count_string());
 }
 void timer::init(char * array)
 {
@@ -238,6 +241,10 @@ LED::LED(int pin)
 	_timer_6h_off = new timer("00d06h00m00s");//6 hours OFF.
 	_timer_12h_on = new timer("00d12h00m00s");//12 hours ON.
 	_timer_12h_off = new timer("00d12h00m00s");//12 hours OFF.
+	//Test timer
+	_timer_1min_on = new timer("00d00h01m00s");//1min ON.
+	_timer_1min_off = new timer("00d00h01m00s");//1min OFF.
+
 	_status=0;//LED is off at start.
 	_pinconfig = pin;//On what pin is the LED.
 }
@@ -250,6 +257,26 @@ void LED::on()
 {
 	_pin->low();//LED IS ON WHEN digital pin is LOW.
 	_status=1;//LED is on.
+}
+void LED::on_1min_off_1min()
+{
+	if(_timer_1min_on->get_done()==0)
+    {
+        _timer_1min_on->serialprint();
+        _timer_1min_on->run();
+        on();//LED ON.
+    }
+    else if(_timer_1min_on->get_done()==1 && _timer_1min_off->get_done()==0)
+    {
+        _timer_1min_off->serialprint();
+        _timer_1min_off->run();
+        off();//LED OFF.
+    }
+    else
+    {
+        _timer_1min_on->reset();
+        _timer_1min_off->reset();
+    }
 }
 void LED::on_18h_off_6h()
 {
@@ -302,6 +329,18 @@ bool LED::get_status()
 int LED::get_pinconfig()
 {
 	return _pinconfig;
+}
+void LED::toggle()
+{
+	bool current_state = _status;
+	if(current_state == 1)//If LED ON
+	{
+		off();//turn it off
+	}
+	else //If LED OFF
+	{
+		on();//turn it on
+	}
 }
 BULB::BULB(int pin)
 {
