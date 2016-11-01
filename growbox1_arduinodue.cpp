@@ -1,16 +1,16 @@
 #include <GROWBOX1.h>
-//DHT11 ARM lib https://github.com/adafruit/DHT-sensor-library/blob/master/examples/DHTtester/DHTtester.ino
+//Growbox1_arduinodue Software by Vincent Gosselin, copyright 2016.	
 
-//Debuging Sessions 31st of October 2016
+//Last update : 1st of November 2016
 
-//Growbox1_arduinodue Software by Vincent Gosselin
-//Block schematic : 1. INIT.
-//					2. SCAN SENSORS
-//					3. STORE DATE
-//					4. SEND DATA INTERNET.
-//					5. DISPLAY FRONT PANEL
-//					6. SCAN SWITCH
-//					7. ORDERS		
+//No more Valve for water injection, reservoir with floatswitch (no point),
+//pushbutton to active valve, led for valve, led for floatswitch, switch for automatic/manual mode.
+
+//Plant grows in soil, no need for automatic water. 
+//Cellphone App tells you how to grow like a pro.
+
+//This is not a hydroponic system.
+
 
 //ALL CLASSES ARE FROM GROWBOX1.
 
@@ -19,23 +19,22 @@ LED LED(13);//PIN 13.
 BULB BULB(7);//PIN7
 FAN FAN_INTAKE(9);//Pin 9.
 FAN FAN_OUTTAKE(10);//PIN 10
-VALVE VALVE(8);//PIN 8
 Digital_pin * pin24 = new Digital_pin(24);//Pin 24, USB status.
 Digital_pin * pin4 = new Digital_pin(4);//Pin 4, USB Mode button.
 
 
 // //Front panel, inclues door led.
-FRONT_PANEL FRONT_PANEL(/* Front panel leds*/
-					50, 48, 44, 42, 40, 38, 
+FRONT_PANEL FRONT_PANEL(/* Front panel leds*/ 
+					50, 48, 44, 40, 38, 
 					36, 34, 32,
-					30, 28, 26, 24,
+					30, 28, 24,
 					/*Front panel Switchs*/
 					53, 47, 51, 49,
-					45, 41, 43,
+					45,
 					/*LCD*/
 					 3);//TX3
 //SENSORS
-//SENSORS SENSORS(7,2,1,4);
+//SENSORS SENSORS(7,2,1);
 //SERVER
 //SERVER SERVER(1);//TX1.
 
@@ -53,7 +52,6 @@ void orders();
 bool run_mode;//0 for normal mode (Commands via FRONTPANEL switches), 1 for USB mode (Commands via USB)
 bool timer_on_1min_off_1min;//0 for inactive, 1 for active. Need to fix in future with OOP.
 
-
 //Pin config goes here.
 void setup()
 {
@@ -66,6 +64,9 @@ void setup()
 }
 void loop()
 {	
+	//Based on new state machine from November 1st 2016.
+	display_front_panel();
+	scan_sensors();
 	if(run_mode) //USB MODE
 	{
 		pin24->high();
@@ -87,6 +88,8 @@ void loop()
 		delay(1000);//Time to let button rebounce.
 		run_mode = !run_mode;
 	}
+
+	Serial.println(MILLISMAX);//Watch current millis to avoid overflow.
 }
 void wait_for_serial_commands()
 {
@@ -140,48 +143,51 @@ void initiate()
 	BULB.init();
 	FAN_INTAKE.init();
 	FAN_OUTTAKE.init();
-	VALVE.init();
+	
 
 	//FRONT_PANEL.display_welcome();	
+}
+//Watch millis() if its really high.
+void overflow_watcher()
+{
+
 }
 // void scan_sensors()
 // {
 // 	SENSORS.scan_soil_moisture();
 // 	SENSORS.scan_temp_humidity();
 // 	SENSORS.scan_door();
-// 	SENSORS.scan_floatswitch();
 // }
-// void store_data()
-// {
-// 	SERVER.Store_data(FAN_INTAKE.get_status(),FAN_OUTTAKE.get_status(),LED.get_status(),BULB.get_status(),
-// 						VALVE.get_status(),SENSORS.get_soil_moisture(),SENSORS.get_temp(),SENSORS.get_humidity(),
-// 						SENSORS.get_door(),SENSORS.get_floatswitch());
-// 	Serial.print(SERVER.get_data());
-// 	Serial.print("\r\n");
-// }
+void store_data()
+{
+	SERVER.Store_data(FAN_INTAKE.get_status(),FAN_OUTTAKE.get_status(),LED.get_status(),BULB.get_status(),
+						SENSORS.get_soil_moisture(),SENSORS.get_temp(),SENSORS.get_humidity(),
+						SENSORS.get_door());
+	Serial.print(SERVER.get_data());
+	Serial.print("\r\n");
+}
 // void send_data_internet()
 // {
 // 	// TO do....
 // }
 // void display_front_panel()
 // {
-	// if(FAN_INTAKE.get_status()==1 && FAN_OUTTAKE.get_status()==1){FRONT_PANEL.FAN_led_on();}	else FRONT_PANEL.FAN_led_off(); 
-	// if(LED.get_status()==1){FRONT_PANEL.LED_led_on();} else FRONT_PANEL.LED_led_off();
-	// if(SERVER.get_phase() == 'G'){FRONT_PANEL.Germination_mode();}
-	// if(SERVER.get_phase() == 'V'){FRONT_PANEL.Vegetation_mode();}
-	// if(SERVER.get_phase() == 'F'){FRONT_PANEL.Flowering_mode();}
-	// if(BULB.get_status()==1){FRONT_PANEL.BULB_led_on();} else FRONT_PANEL.BULB_led_off();
-	// if(VALVE.get_status()==1){FRONT_PANEL.VALVE_led_on();} else FRONT_PANEL.VALVE_led_off();
-	// unsigned long currentMillis = millis();
-	// if(currentMillis - _previousMillis >1000)//Every 1 sec.
-	// {
-	// _previousMillis = currentMillis;	
-	// Serial3.print(SENSORS.get_temp(),0);
- //    Serial3.print("oC ");
- //    Serial3.print(SENSORS.get_humidity(),0);
- //    Serial3.print("% * Growbox1");
- //    Serial3.print("\n");
-	// }
+// 	if(FAN_INTAKE.get_status()==1 && FAN_OUTTAKE.get_status()==1){FRONT_PANEL.FAN_led_on();}	else FRONT_PANEL.FAN_led_off(); 
+// 	if(LED.get_status()==1){FRONT_PANEL.LED_led_on();} else FRONT_PANEL.LED_led_off();
+// 	if(SERVER.get_phase() == 'G'){FRONT_PANEL.Germination_mode();}
+// 	if(SERVER.get_phase() == 'V'){FRONT_PANEL.Vegetation_mode();}
+// 	if(SERVER.get_phase() == 'F'){FRONT_PANEL.Flowering_mode();}
+// 	if(BULB.get_status()==1){FRONT_PANEL.BULB_led_on();} else FRONT_PANEL.BULB_led_off();
+// 	unsigned long currentMillis = millis();
+// 	if(currentMillis - _previousMillis >1000)//Every 1 sec.
+// 	{
+// 	_previousMillis = currentMillis;	
+// 	Serial3.print(SENSORS.get_temp(),0);
+//     Serial3.print("oC ");
+//     Serial3.print(SENSORS.get_humidity(),0);
+//     Serial3.print("% * Growbox1");
+//     Serial3.print("\n");
+// 	}
 // }
 // void scan_switch()
 // {
@@ -225,9 +231,4 @@ void initiate()
 // 		BULB.on();
 // 	}
 // 	else BULB.off();
-// 	if(FRONT_PANEL.get_switch_register() & 0x01)//Valve pushbutton pressed.
-// 	{
-// 		VALVE.open();
-// 	}
-// 	else VALVE.close();
 // }

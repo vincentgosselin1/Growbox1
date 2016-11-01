@@ -2,6 +2,7 @@
 
 //This File should copied to Documents/Arduino/Libraries/GROWBOX1/GROWBOX1.cpp for changes to happen in the Arduino.
 
+
 #include "Arduino.h"
 #include "GROWBOX1.h"
 //Digital pin class.
@@ -455,70 +456,13 @@ int FAN::get_pinconfig()
 {
 	return _pinconfig;
 }
-VALVE::VALVE(int pin)
-{
-	_pin = new Digital_pin(pin);//Creating object Digital_pin.
-	_pin->set_output();//Pin will be an output.
-	_timer_on_for = new timer("00d00h00m00s");//on_for default.
-	_done = 0;//VALVE is not done at start :PPP.
-	_status=0;//VALVE is off at start.
-	_pinconfig = pin;
-}
-void VALVE::open()
-{
-	_pin->low();//VALVE IS Open WHEN digital pin is LOW.
-	_status=1;//VALVE is open.
-}
-void VALVE::close()
-{
-	_pin->high();//VALVE IS OPEN WHEN digital pin is LOW.
-	_status=0;//FAN is closed.
-}
-void VALVE::init()
-{
-	close();
-}
-void VALVE::open_for(char * array)
-{
-	if(_timer_on_for->get_ready_to_count()==0)
-	{
-		_done = 0;
-		_timer_on_for->init(array);
-		_timer_on_for->set_ready_to_count(1);
-	}
-	else if(_timer_on_for->get_ready_to_count()==1 && _timer_on_for->get_done()==0)
-	{
-		_timer_on_for->run();
-		_timer_on_for->serialprint();
-		open();
-	}
-	else 
-	{
-		_timer_on_for->set_ready_to_count(0);
-		_done = 1;
-		close();
-	}
-}
-bool VALVE::get_status()
-{
-	return _status;
-}
-bool VALVE::get_done()
-{
-	return _done;
-}
-int VALVE::get_pinconfig()
-{
-	return _pinconfig;
-}
 FRONT_PANEL::FRONT_PANEL(/* Front panel leds*/
-					int FANled, int LEDled, int BULBled, 
-					int VALVEled, int Germinationled, int Vegetationled, 
+					int FANled, int LEDled, int BULBled, int Germinationled, int Vegetationled, 
 					int Floweringled, int phase_termineeled, int dryled,
-					int moistled, int wetled, int nowaterled, int dooropenled,
+					int moistled, int wetled, int dooropenled,
 					/*Front panel Switchs*/
 					int FANswitch, int LEDswitch, int modeaswitch, int modebswitch,
-					int BULBswitch, int VALVEpushbutton, int automanuelswitch,
+					int BULBswitch,
 					/*LCD*/
 					int lcd_serial_port)
 {
@@ -533,9 +477,6 @@ FRONT_PANEL::FRONT_PANEL(/* Front panel leds*/
 	_led3 = new Digital_pin(BULBled);
 	_led3->set_output();
 	_led3->init();
-	_led4 = new Digital_pin(VALVEled);
-	_led4->set_output();
-	_led4->init();
 	_led5 = new Digital_pin(Germinationled);
 	_led5->set_output();
 	_led5->init();
@@ -557,9 +498,6 @@ FRONT_PANEL::FRONT_PANEL(/* Front panel leds*/
 	_led11 = new Digital_pin(wetled);
 	_led11->set_output();
 	_led11->init();
-	_led12 = new Digital_pin(nowaterled);
-	_led12->set_output();
-	_led12->init();
 	_led13 = new Digital_pin(dooropenled);
 	_led13->set_output();
 	_led13->init();
@@ -574,10 +512,6 @@ FRONT_PANEL::FRONT_PANEL(/* Front panel leds*/
 	_switch3b->set_input();
 	_switch4 = new Digital_pin(BULBswitch);
 	_switch4->set_input();
-	_switch5 = new Digital_pin(automanuelswitch);
-	_switch5->set_input();
-	_pushbutton1 = new Digital_pin(VALVEpushbutton);
-	_pushbutton1->set_input();
 	//LCD
 	_lcd_serial_port = lcd_serial_port;
 	//Switchs
@@ -619,18 +553,6 @@ void FRONT_PANEL::BULB_led_off()
 void FRONT_PANEL::BULB_led_blink()
 {
 	_led3->blink();
-}
-void FRONT_PANEL::VALVE_led_on()
-{
-	_led4->high();
-}
-void FRONT_PANEL::VALVE_led_off()
-{
-	_led4->low();
-}
-void FRONT_PANEL::VALVE_led_blink()
-{
-	_led4->blink();
 }
 void FRONT_PANEL::Germination_mode()
 {
@@ -676,14 +598,6 @@ void FRONT_PANEL::wet()
 	_led10->low();
 	_led11->high();
 }
-void FRONT_PANEL::no_water_led_on()
-{
-	_led12->high();
-}
-void FRONT_PANEL::no_water_led_off()
-{
-	_led12->low();
-}
 void FRONT_PANEL::door_led_on()
 {
 	_led13->high();
@@ -697,7 +611,6 @@ void FRONT_PANEL::all_led_off()
 	_led1->low();
 	_led2->low();
 	_led3->low();
-	_led4->low();
 	_led5->low();
 	_led6->low();
 	_led7->low();
@@ -705,7 +618,6 @@ void FRONT_PANEL::all_led_off()
 	_led9->low();
 	_led10->low();
 	_led11->low();
-	_led12->low();
 	_led13->low();
 
 }
@@ -715,7 +627,6 @@ void FRONT_PANEL::flash(int led_register)//Last 3 bits unused.
 	if(led_register & 0x8000){_led1->high();}
 	if(led_register & 0x4000){_led2->high();}
 	if(led_register & 0x2000){_led3->high();}
-	if(led_register & 0x1000){_led4->high();}
 	if(led_register & 0x0800){_led5->high();}
 	if(led_register & 0x0400){_led6->high();}
 	if(led_register & 0x0200){_led7->high();}
@@ -723,7 +634,6 @@ void FRONT_PANEL::flash(int led_register)//Last 3 bits unused.
 	if(led_register & 0x0080){_led9->high();}
 	if(led_register & 0x0040){_led10->high();}
 	if(led_register & 0x0020){_led11->high();}
-	if(led_register & 0x0010){_led12->high();}
 	if(led_register & 0x0008){_led13->high();}
 }
 //LCD
@@ -823,16 +733,7 @@ void FRONT_PANEL::scan_switch()
 	//Switch4 
 	if(_switch4->read_input()==0)/*Switch4 ON*/{temp = 0x04 | temp;}
 	else						/*Switch4 OFF*/{temp = 0x00 | temp;}
-	//Switch5
-	if(_switch5->read_input()==0)/*Switch5 ON*/{temp = 0x02 | temp;}
-	else						/*Switch6 OFF*/{temp = 0x00 | temp;}
-	//Pushbutton1
-	if(_pushbutton1->read_input()==0)/*Pushbutton is pressed*/{temp = 0x01 | temp;}
-	else							/*Pushbutton is not pressed*/{temp = 0x00 | temp;}
 
-	//Pceee mofooo.
-
-	//Pow pow modifies register. We are in business my dear.
 	_switch_register = temp;
 	}
 }
@@ -858,20 +759,17 @@ void FRONT_PANEL::init()
 		break;
 	}
 }
-SENSORS::SENSORS(int soil_moisture_pin, int temp_humidity_pin, int door_sensor_pin, int floatswitch_pin)
+SENSORS::SENSORS(int soil_moisture_pin, int temp_humidity_pin, int door_sensor_pin)
 {
 	_soil_moisture_sensor = new analog_pin(soil_moisture_pin);
 	_temp_humidity_sensor = new DHT(temp_humidity_pin, 11);
 	_door_sensor = new analog_pin(door_sensor_pin);
-	_reservoir_sensor = new Digital_pin(floatswitch_pin);
-	_reservoir_sensor->set_input();
 	_previousMillis = 0;//yess
 	_previousMillis1 = 0;//Uhhh, yes I guess.
 	_soil_moisture = 0;
 	_temperature = 0;
 	_humidity= 0;// Add ,0 for no decimal!
 	_door = 0;//Adc value boy!
-	_floatswitch = 0;//1 if reservoir is full, 0 empty!
 }
 void SENSORS::scan_soil_moisture()
 {
@@ -912,14 +810,6 @@ int SENSORS::get_door()
 {
 	return _door;
 }
-void SENSORS::scan_floatswitch()
-{
-	_floatswitch = _reservoir_sensor->read_input();
-}
-bool SENSORS::get_floatswitch()
-{
-	return _floatswitch;
-}
 SERVER::SERVER(int nano_internet_pin)
 {
 	_Global_timer = new timer("28d00h00m00s");//Thats right init it that way dawg.
@@ -930,7 +820,7 @@ SERVER::SERVER(int nano_internet_pin)
 }
 void SERVER::Global_timer_run()
 {
-	if(_Global_timer->get_done()==0)
+	if(_Global_timer->get_done()==0) 
 	{
 		_Global_timer->run();
 	}
@@ -963,16 +853,15 @@ char * SERVER::get_Global_timer()
 	return _Global_timer->get_count_string();
 }
 void SERVER::Store_data(/* Components */
-						bool FAN_intake, bool FAN_outake, bool LED, bool BULB, bool VALVE,
+						bool FAN_intake, bool FAN_outake, bool LED, bool BULB,
 						/* Sensors */
-						int soil_moisture, float temp, float humidity, int door, bool floatswitch)
+						int soil_moisture, float temp, float humidity, int door)
 {
 	
 	/*First One.*/strncpy(_data,"FAN_intake is ",sizeof("FAN_intake is ")); if(FAN_intake == 1) {strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
 	/*The rest.*/	strcat(_data, " FAN_outake is ");						if(FAN_outake == 1)	{strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
 					strcat(_data, " LED is ");						if(LED == 1)	{strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
 					strcat(_data, " BULB is ");						if(BULB == 1)	{strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
-					strcat(_data, " VALVE is ");						if(VALVE == 1)	{strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
 
 	/*Bunch of sensors*/
 					/*Moisture sensor*/ 
@@ -999,10 +888,6 @@ void SERVER::Store_data(/* Components */
 					str3 = String(door);
 					str3.toCharArray(array3,5);
 					strcat(_data, " Door is ");strcat(_data, array3);strcat(_data, " ,");
-					/*Reservoir*/
-					strcat(_data, " Reservoir is ");						if(floatswitch == 1)	{strcat(_data,"Full ,");} else strcat(_data,"Empty ,");
-
-
 }
 char * SERVER::get_data()
 {

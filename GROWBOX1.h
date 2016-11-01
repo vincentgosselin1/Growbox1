@@ -1,11 +1,16 @@
 //GROWBOX library, includes all necessery classes. By Vincent Gosselin
 
+
 //This File should copied to Documents/Arduino/Libraries/GROWBOX1/GROWBOX1.h for changes to happen in the Arduino.
 #ifndef GROWBOX1_h 
 #define GROWBOX1_h
 
 #include "Arduino.h"
 #include "dht.h"
+
+
+//Upperlimit for MCU millis() to avoid MCU 
+const unsigned long MILLISMAX = 4200000000;
 
 class Digital_pin
 {
@@ -36,7 +41,7 @@ class analog_pin
 class timer
 {
 	public:
-	timer(const char * array);//Constructor. input is in the format of 00d00h00m00s.
+	timer(const char * array);//Constructor. String is in the format of 00d00h00m00s.
 	unsigned long get_count();//Returns count in seconds.
 	bool get_status();//Returns status 0 not running.
 	bool get_done();//IS timer done? 1 yes.
@@ -122,36 +127,17 @@ class FAN
 		bool _done;
 		int _pinconfig;
 };
-class VALVE
-{
-	public:
-		VALVE(int pin);//Constructor.
-		void close();//Command to close VALVE.
-		void open();//Command to open VALVE.
-		void open_for(char * array);
-		bool get_status();
-		bool get_done();
-		int get_pinconfig();
-		void init();
-	private:
-		Digital_pin *_pin;//Digital_pin object.
-		timer *_timer_on_for;//timer object.
-		bool _status;		
-		bool _done;	
-		int _pinconfig;
-};
 //FRONT PANEL
 class FRONT_PANEL
 {
 	public:
 		FRONT_PANEL(/* Front panel leds*/
-					int FANled, int LEDled, int BULBled, 
-					int VALVEled, int Germinationled, int Vegetationled, 
+					int FANled, int LEDled, int BULBled, int Germinationled, int Vegetationled, 
 					int Floweringled, int phase_termineeled, int dryled,
-					int moistled, int wetled, int nowaterled, int dooropenled,
+					int moistled, int wetled, int dooropenled,
 					/*Front panel Switchs*/
 					int FANswitch, int LEDswitch, int modeaswitch, int modebswitch,
-					int BULBswitch, int VALVEpushbutton, int automanuelswitch,
+					int BULBswitch,
 					/*LCD*/
 					 int lcd_serial_port);
 
@@ -165,9 +151,6 @@ class FRONT_PANEL
 		void BULB_led_on();
 		void BULB_led_off();
 		void BULB_led_blink();
-		void VALVE_led_on();
-		void VALVE_led_off();
-		void VALVE_led_blink();
 
 		void Germination_mode();
 		void Vegetation_mode();
@@ -179,9 +162,6 @@ class FRONT_PANEL
 		void dry();
 		void moist();
 		void wet();
-
-		void no_water_led_on();
-		void no_water_led_off();
 
 		void door_led_on();
 		void door_led_off();
@@ -206,7 +186,7 @@ class FRONT_PANEL
 		Digital_pin *_led1;//Digital_pin object. Please see Front panel Image for pin Assignation.
 		Digital_pin *_led2;//Digital_pin object.
 		Digital_pin *_led3;//Digital_pin object.
-		Digital_pin *_led4;//Digital_pin object.
+		//No Valve _led4
 		Digital_pin *_led5;//Digital_pin object.
 		Digital_pin *_led6;//Digital_pin object.
 		Digital_pin *_led7;//Digital_pin object.
@@ -214,7 +194,7 @@ class FRONT_PANEL
 		Digital_pin *_led9;//Digital_pin object.
 		Digital_pin *_led10;//Digital_pin object.
 		Digital_pin *_led11;//Digital_pin object.
-		Digital_pin *_led12;//Digital_pin object.
+		//No water _led12
 		Digital_pin *_led13;//Digital_pin object.
 		/*Front panel Switchs*/
 		Digital_pin *_switch1;//Digital_pin object.
@@ -222,8 +202,8 @@ class FRONT_PANEL
 		Digital_pin *_switch3a;//Digital_pin object.
 		Digital_pin *_switch3b;//Digital_pin object.
 		Digital_pin *_switch4;//Digital_pin object.
-		Digital_pin *_switch5;//Digital_pin object.
-		Digital_pin *_pushbutton1;//Digital_pin object.
+		//No more _switch5 for automatic/manual mode for watering.
+		//No more pushbutton switch.
 		//Switch register.
 		char _switch_register;//Holds Switch states on front panel. On 8bit (last unsused). (sw1,sw2,sw3a,sw3b,sw4,sw5,pb1, X) 
 		int _lcd_serial_port;//0,1,2,3. Serials port on Arduino Due.
@@ -232,7 +212,7 @@ class FRONT_PANEL
 class SENSORS
 {
 	public:
-		SENSORS(int soil_moisture_pin, int temp_humidity_pin, int door_sensor_pin, int floatswitch_pin);
+		SENSORS(int soil_moisture_pin, int temp_humidity_pin, int door_sensor_pin);
 		void scan_soil_moisture();//soil humidity sensor
 		int get_soil_moisture();
 		void scan_temp_humidity();// temperature/humidity sensor
@@ -240,8 +220,6 @@ class SENSORS
 		float get_humidity();
 		void scan_door();
 		int get_door();//adc pin!
-		void scan_floatswitch();
-		bool get_floatswitch();//0 empty, 1 full.
 	private:
 		analog_pin *_soil_moisture_sensor;
 		DHT *_temp_humidity_sensor;
@@ -252,9 +230,8 @@ class SENSORS
 		float _temperature;
 		float _humidity;// Add ,0 for no decimal!
 		int _door;//Adc value boy!
-		bool _floatswitch;//1 if reservoir is full, 0 empty!
 
-		unsigned long _previousMillis;
+		unsigned long _previousMillis;//Clean this later.
 		unsigned long _previousMillis1;
 };
 class SERVER
@@ -265,11 +242,11 @@ class SERVER
 		void Global_timer_reset();
 		void set_phase(char p);
 		char get_phase();
-		char *get_Global_timer();
+		char * get_Global_timer();
 		void Store_data(/* Components */
-						bool FAN_intake, bool FAN_outake, bool LED, bool BULB, bool VALVE,
+						bool FAN_intake, bool FAN_outake, bool LED, bool BULB,
 						/* Sensors */
-						int soil_moisture, float temp, float humidity, int door, bool floatswitch);
+						int soil_moisture, float temp, float humidity, int door);
 		char * get_data();
 		void Send_data_internet();
 		void init();
