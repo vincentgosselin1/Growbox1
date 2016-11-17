@@ -19,8 +19,8 @@ LED LED(13);//PIN 13.
 BULB BULB(7);//PIN7
 FAN FAN_INTAKE(9);//Pin 9.
 FAN FAN_OUTTAKE(10);//PIN 10
-Digital_pin * pin24 = new Digital_pin(24);//Pin 24, USB status.
-Digital_pin * pin4 = new Digital_pin(4);//Pin 4, USB Mode button.
+USB_led Digital_pin(24);//Pin 24, USB status.
+USB_button Digital_pin(4);//Pin 4, USB Mode button.
 
 
 // //Front panel, inclues door led.
@@ -51,13 +51,13 @@ void orders();
 //USB MODE additions
 bool run_mode;//0 for normal mode (Commands via FRONTPANEL switches), 1 for USB mode (Commands via USB)
 bool timer_on_1min_off_1min;//0 for inactive, 1 for active. Need to fix in future with OOP.
+void listen_for_serial_commands();
+void execute_serial_commands();
 
 //Pin config goes here.
 void setup()
 {
 	initiate();
-	pin4->set_input_pullup();
-	pin24->init();//USB mode led.
 
 	run_mode = 0;//normal mode (default)
 	timer_on_1min_off_1min = 0;//Timer inactive at start.
@@ -65,17 +65,21 @@ void setup()
 void loop()
 {	
 	//Based on new state machine from November 1st 2016.
+	store_data();
+	send_data_internet();//every 1min.
 	display_front_panel();
-	scan_sensors();
+	scan_sensors();//every 5sec.
 	if(run_mode) //USB MODE
 	{
-		pin24->high();
-		wait_for_serial_commands();
-		commands();
+		USB_led.high();
+		listen_for_serial_commands();
+		execute_serial_commands();
 	}
 	else		//FrontPanel Switches
 	{
-		pin24->low();	
+		USB_led.low();
+		listen_for_manual_commands();
+		execute_manual_commands();	
 	}
 	//scan_sensors();
 	//store_data();
@@ -83,22 +87,21 @@ void loop()
 	//display_front_panel();
 	//scan_switch();
 	//orders();
-	if(pin4->read_input() == 0)//switch between normal/usb mode.
+	if(USB_button.read_input() == 0)//switch between normal/usb mode.
 	{
 		delay(1000);//Time to let button rebounce.
 		run_mode = !run_mode;
 	}
 
-	Serial.println(MILLISMAX);//Watch current millis to avoid overflow.
 }
-void wait_for_serial_commands()
+void listen_for_serial_commands()
 {
 	// Serial commands
 	// a -> LED ON/OFF
 	// s -> LED ON 1min, OFF 1min.
 	// d -> FAN1 ON/OFF
 	// f -> Fan2 ON/OFF
-	char incomingChar = '0';   // for incoming serial data
+	char incomingChar;   // for incoming serial data
 	if (Serial.available() > 0) 
 	{
     // read the incoming byte:
@@ -120,7 +123,7 @@ void wait_for_serial_commands()
     	}
     }
 }
-void commands()
+void execute_serial_commands()
 {
 	//LED Commands
 	if(timer_on_1min_off_1min)//If timer active.
@@ -143,14 +146,16 @@ void initiate()
 	BULB.init();
 	FAN_INTAKE.init();
 	FAN_OUTTAKE.init();
-	
+	//USB mode addition
+	USB_button.set_input_pullup();
+	USB_led.init();//USB mode led.
 
 	//FRONT_PANEL.display_welcome();	
 }
-//Watch millis() if its really high.
+//Watch millis() if it overflows.
 void overflow_watcher()
 {
-
+	
 }
 // void scan_sensors()
 // {
@@ -189,11 +194,10 @@ void store_data()
 //     Serial3.print("\n");
 // 	}
 // }
-// void scan_switch()
-// {
-// 	FRONT_PANEL.scan_switch();
-
-// }
+void scan_switch()
+{
+	FRONT_PANEL.scan_switch();
+}
 // void orders()
 // {
 // 	//From switch

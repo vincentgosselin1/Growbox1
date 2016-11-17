@@ -8,10 +8,6 @@
 #include "Arduino.h"
 #include "dht.h"
 
-
-//Upperlimit for MCU millis() to avoid MCU 
-const unsigned long MILLISMAX = 4200000000;
-
 class Digital_pin
 {
 	public:

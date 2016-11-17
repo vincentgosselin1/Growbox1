@@ -1,4 +1,5 @@
 //GROWBOX1 Library, defitions of class.
+//Growbox1_arduinodue Software by Vincent Gosselin, copyright 2016.	
 
 //This File should copied to Documents/Arduino/Libraries/GROWBOX1/GROWBOX1.cpp for changes to happen in the Arduino.
 
@@ -200,7 +201,9 @@ void timer::run()
 		{
 			//Count my dear.
  			_count--;
- 			_previousMillis=currentMillis;            
+ 			_previousMillis=currentMillis;
+ 			//print to serial
+ 			serialprint();            
 		}
 		else;//do nothing.
 	}
@@ -263,13 +266,11 @@ void LED::on_1min_off_1min()
 {
 	if(_timer_1min_on->get_done()==0)
     {
-        _timer_1min_on->serialprint();
         _timer_1min_on->run();
         on();//LED ON.
     }
     else if(_timer_1min_on->get_done()==1 && _timer_1min_off->get_done()==0)
     {
-        _timer_1min_off->serialprint();
         _timer_1min_off->run();
         off();//LED OFF.
     }
@@ -283,13 +284,11 @@ void LED::on_18h_off_6h()
 {
 	if(_timer_18h_on->get_done()==0)
     {
-        _timer_18h_on->serialprint();
         _timer_18h_on->run();
         on();//LED ON.
     }
     else if(_timer_18h_on->get_done()==1 && _timer_6h_off->get_done()==0)
     {
-        _timer_6h_off->serialprint();
         _timer_6h_off->run();
         off();//LED OFF.
     }
@@ -303,13 +302,11 @@ void LED::on_12h_off_12h()
 {
 	if(_timer_12h_on->get_done()==0)
 	{
-		_timer_12h_on->serialprint();
 		_timer_12h_on->run();
 		on();
 	}
 	else if(_timer_12h_on->get_done()==1 && _timer_12h_off->get_done()==0)
 	{
-		_timer_12h_off->serialprint();
 		_timer_12h_off->run();
 		off();
 	}
@@ -377,7 +374,6 @@ void BULB::on_for(char * array)
 	else if(_timer_on_for->get_ready_to_count()==1 && _timer_on_for->get_done()==0)
 	{
 		_timer_on_for->run();
-		_timer_on_for->serialprint();
 		on();
 	}
 	else 
@@ -434,7 +430,6 @@ void FAN::on_for(char * array)
 	else if(_timer_on_for->get_ready_to_count()==1 && _timer_on_for->get_done()==0)
 	{
 		_timer_on_for->run();
-		_timer_on_for->serialprint();
 		on();
 	}
 	else 
