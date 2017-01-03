@@ -86,7 +86,7 @@ void display_front_panel()
 }
 void listen_for_manual_commands()
 {
-	//Switch listen with delay to avoid debouncing.
+	//Switch listen with delay to avoid bouncing.
 	delay(300);
 	FANswitch.listen();
 	Growlightswitch.listen();
