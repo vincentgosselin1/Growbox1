@@ -6,7 +6,6 @@
 #define GROWBOX1_h
 
 #include "Arduino.h"
-#include "dht.h"
 
 class Digital_pin
 {
@@ -25,6 +24,51 @@ class Digital_pin
 		int _pin;
 		bool _state;
 		unsigned long _previousMillis;
+};
+class led
+{
+	public:
+		led(int pin);
+		void on();
+		void off();
+	private:
+		Digital_pin *_pin;//Digital_pin object.
+		bool _state;
+};
+class Pushbutton
+{
+	public:
+		Pushbutton(int pin);
+		void set_state();
+		bool get_state();
+	private:
+		Digital_pin *_pin;//Digital_pin object.
+		bool _state;
+};
+class Switch
+{
+	public:
+		Switch(int pin);
+		void listen();
+		bool get_status();// 0 -> ON, 1 -> OFF.
+	private:
+	Digital_pin *_pin;//Digital_pin object.
+	bool _status;	
+};
+class Switch3WAY
+{
+	public:
+	Switch3WAY(int pinA, int pinB);
+	void listen();
+	char get_position();// pinA=0,pinB=1 -> A (X,0,0)
+						// pinA=1,pinB=0 -> B (0,0,X)
+						// pinA=1,pinB=1 -> C (0,X,0)
+
+	private:
+	Digital_pin *_pinA;//Digital_pin object.
+	Digital_pin *_pinB;//Digital_pin object.
+	char _position;// Position A, B, C. 	
+
 };
 class analog_pin
 {
@@ -59,18 +103,20 @@ class timer
 	unsigned long _previousMillis;
 };
 //AC Components
-class LED
+class Growlight//AC component of the growbox, replaces LED.
 {	
 	public:
-		LED(int pin);//Constructor.
-		void off();//command to turn off LED.
-		void on();//command to turn on LED.
-		void on_18h_off_6h();//ON for 18 hours, OFF for 6 hours.
-		void on_12h_off_12h();//ON for 12 hours, OFF for 12 hours.
+		Growlight(int pin);//Constructor.
+		void off();//command to turn off Growlight.
+		void on();//command to turn on Growlight.
+		void on_24h();;//On for 24 hours. (Germination mode)
+		void on_18h_off_6h();//ON for 18 hours, OFF for 6 hours. (Vegetation mode)
+		void on_12h_off_12h();//ON for 12 hours, OFF for 12 hours. (Flowering mode)
 
 		void on_1min_off_1min();//On for 1 min, off 1min. FOR TESTS
 
-		bool get_status();//to check LED is on or off :).
+		bool get_status();//to check Growlight is on or off :).
+		char get_phase();//returns current phase of the growlight.
 		int get_pinconfig();
 		void init();//Init.
 		void toggle();//ON->OFF,OFF->ON.
@@ -82,8 +128,9 @@ class LED
 		timer *_timer_12h_off;//timer object.
 		timer *_timer_1min_on;//timer tests
 		timer *_timer_1min_off;
-		bool _status;
-		int _pinconfig;//On what pin is LED.
+		bool _status;// 0 -> OFF, 1 -> ON.
+		char _phase; // G, V, F.
+		int _pinconfig;//On what pin is Growlight.
 
 };
 class BULB
@@ -123,137 +170,13 @@ class FAN
 		bool _done;
 		int _pinconfig;
 };
-//FRONT PANEL
-class FRONT_PANEL
+class  LCD
 {
 	public:
-		FRONT_PANEL(/* Front panel leds*/
-					int FANled, int LEDled, int BULBled, int Germinationled, int Vegetationled, 
-					int Floweringled, int phase_termineeled, int dryled,
-					int moistled, int wetled, int dooropenled,
-					/*Front panel Switchs*/
-					int FANswitch, int LEDswitch, int modeaswitch, int modebswitch,
-					int BULBswitch,
-					/*LCD*/
-					 int lcd_serial_port);
-
-		//Leds on front panel.
-		void FAN_led_on();
-		void FAN_led_off();
-		void FAN_led_blink();
-		void LED_led_on();
-		void LED_led_off();
-		void LED_led_blink();
-		void BULB_led_on();
-		void BULB_led_off();
-		void BULB_led_blink();
-
-		void Germination_mode();
-		void Vegetation_mode();
-		void Flowering_mode();
-
-		void phase_terminee_led_on();
-		void phase_terminee_led_off();
-
-		void dry();
-		void moist();
-		void wet();
-
-		void door_led_on();
-		void door_led_off();
-
-		void all_led_off();
-		void flash(int led_register);// flashes front panel by bits. 16bits, last 4 unused.
-
-		//LCD
+		LCD(int lcd_serial_port);
 		void send_lcd(char * array);//In the format of : 12oC38%rh * MASTER TIMER HERE.
-		void display_welcome();
-		void display_error();
-		void display_almostdone();
-
-		//Switchs
-		void scan_switch();//modifies _switch_register.
-		char get_switch_register();//returns _switch_register.
-
-		void init();
 
 	private:
-		/* Front panel leds*/
-		Digital_pin *_led1;//Digital_pin object. Please see Front panel Image for pin Assignation.
-		Digital_pin *_led2;//Digital_pin object.
-		Digital_pin *_led3;//Digital_pin object.
-		//No Valve _led4
-		Digital_pin *_led5;//Digital_pin object.
-		Digital_pin *_led6;//Digital_pin object.
-		Digital_pin *_led7;//Digital_pin object.
-		Digital_pin *_led8;//Digital_pin object.
-		Digital_pin *_led9;//Digital_pin object.
-		Digital_pin *_led10;//Digital_pin object.
-		Digital_pin *_led11;//Digital_pin object.
-		//No water _led12
-		Digital_pin *_led13;//Digital_pin object.
-		/*Front panel Switchs*/
-		Digital_pin *_switch1;//Digital_pin object.
-		Digital_pin *_switch2;//Digital_pin object.
-		Digital_pin *_switch3a;//Digital_pin object.
-		Digital_pin *_switch3b;//Digital_pin object.
-		Digital_pin *_switch4;//Digital_pin object.
-		//No more _switch5 for automatic/manual mode for watering.
-		//No more pushbutton switch.
-		//Switch register.
-		char _switch_register;//Holds Switch states on front panel. On 8bit (last unsused). (sw1,sw2,sw3a,sw3b,sw4,sw5,pb1, X) 
-		int _lcd_serial_port;//0,1,2,3. Serials port on Arduino Due.
-		unsigned long _previousMillis;//To allow switch debounce.
+		int _lcd_serial_port;	
 };
-class SENSORS
-{
-	public:
-		SENSORS(int soil_moisture_pin, int temp_humidity_pin, int door_sensor_pin);
-		void scan_soil_moisture();//soil humidity sensor
-		int get_soil_moisture();
-		void scan_temp_humidity();// temperature/humidity sensor
-		float get_temp();
-		float get_humidity();
-		void scan_door();
-		int get_door();//adc pin!
-	private:
-		analog_pin *_soil_moisture_sensor;
-		DHT *_temp_humidity_sensor;
-		analog_pin *_door_sensor;
-		Digital_pin *_reservoir_sensor;
-
-		int _soil_moisture;
-		float _temperature;
-		float _humidity;// Add ,0 for no decimal!
-		int _door;//Adc value boy!
-
-		unsigned long _previousMillis;//Clean this later.
-		unsigned long _previousMillis1;
-};
-class SERVER
-{
-	public:
-		SERVER(int nano_internet_pin);
-		void Global_timer_run();
-		void Global_timer_reset();
-		void set_phase(char p);
-		char get_phase();
-		char * get_Global_timer();
-		void Store_data(/* Components */
-						bool FAN_intake, bool FAN_outake, bool LED, bool BULB,
-						/* Sensors */
-						int soil_moisture, float temp, float humidity, int door);
-		char * get_data();
-		void Send_data_internet();
-		void init();
-
-	private:
-		timer *_Global_timer;//For the phases timer!
-		char _phase;//Current phase! G, V, F.
-		char *_data;//To store data in a big fat array.	
-		int _nano_internet_pin;
-		unsigned long _previousMillis;//Thats right, sends data to internet every X seconds.
-
-};
-
 #endif

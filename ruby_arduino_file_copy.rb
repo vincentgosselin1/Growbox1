@@ -22,9 +22,11 @@ path_to_library_h_file = "/Users/vincentgosselin/Documents/Arduino/libraries/GRO
 File.open(path_to_growbox1_arduinodue_ino_file, "w") do |f|
 	f.puts growbox1_arduinodue_cpp
 end
+
 File.open(path_to_library_cpp_file, "w") do |f|
 	f.puts library_cpp
 end
+
 File.open(path_to_library_h_file, "w") do |f|
 	f.puts library_h
 end

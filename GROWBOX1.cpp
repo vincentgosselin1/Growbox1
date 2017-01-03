@@ -62,6 +62,81 @@ bool Digital_pin::read_input()
 	_state = state;
 	return state;
 }
+//led class
+led::led(int pin)
+{
+	_pin = new Digital_pin(pin);//Creating object Digital_pin.
+	_pin->set_output();//Pin will be an output.
+	_pin->low();//puts pin to ground
+	_state = 0;
+}
+void led::on()
+{
+	_pin->high();
+	_state = 1;
+}
+void led::off()
+{
+	_pin->low();
+	_state = 0;
+}
+//Pushbutton class
+Pushbutton::Pushbutton(int pin)
+{
+	_pin = new Digital_pin(pin);//Creating object Digital_pin.
+	_pin->set_input_pullup();
+	_state = 1;//Off by default.
+}
+void Pushbutton::set_state()
+{
+	bool state = _pin->read_input();// ON is 0 (Grounded), OFF is 1 (OPEN)
+	_state = state;
+}
+bool Pushbutton::get_state()
+{
+	return _state;
+}
+//Switch class
+Switch::Switch(int pin)
+{
+	_pin = new Digital_pin(pin);//Creating object Digital_pin.
+	_pin->set_input_pullup();
+	_status = 1;//Off by default.
+}
+void Switch::listen()
+{
+	bool status = _pin->read_input();// ON is 0 (Grounded), OFF is 1 (OPEN)
+	_status = status;
+}
+bool Switch::get_status()
+{
+	return _status;
+}
+//Switch3WAY class
+Switch3WAY::Switch3WAY(int pinA, int pinB)
+{
+	_pinA = new Digital_pin(pinA);//Creating object Digital_pin.
+	_pinA->set_input_pullup();
+	_pinB = new Digital_pin(pinB);//Creating object Digital_pin.
+	_pinB->set_input_pullup();
+	_position = 'A';//Default
+}
+void Switch3WAY::listen()
+{
+	char position;
+	bool tempA = _pinA->read_input();
+	bool tempB = _pinB->read_input();
+
+	if(tempA==0 && tempB == 1){ position = 'A';}
+	if(tempA==1 && tempB == 0){ position = 'B';}
+	if(tempA==1 && tempB == 1){ position = 'C';}
+
+	_position = position;
+}
+char Switch3WAY::get_position()
+{
+	return _position;
+}
 analog_pin::analog_pin(int pin)
 {
 	_pin=pin;
@@ -165,7 +240,7 @@ char * timer::get_count_string()
 	_countarray[9]=temp+'0';
 	_countarray[10]=count+'0';
 	_countarray[11]='s';
-//Perfectooooooooo Copyright for Vincent Gosselin, Anyone cloning this code will owe me 100$.
+
 
 return _countarray;
 }
@@ -197,6 +272,12 @@ void timer::run()
 	{
 		_status = 1;
 		unsigned long currentMillis = millis();
+		//Condition to break overflow that happens after 50days when previousmillis is greater than currentmillis.
+		if(_previousMillis > currentMillis)
+		{
+			_previousMillis = 0;
+		}
+		//Counts 1 sec.
 		if(currentMillis - _previousMillis >= 1000)//1000ms = 1sec.
 		{
 			//Count my dear.
@@ -237,7 +318,7 @@ void timer::init(char * array)
 
 
 //COMPONENTS CLASSES
-LED::LED(int pin)
+Growlight::Growlight(int pin)
 {
 	_pin = new Digital_pin(pin);//Creating object Digital_pin.
 	_pin->set_output();//Pin will be an output.
@@ -249,30 +330,31 @@ LED::LED(int pin)
 	_timer_1min_on = new timer("00d00h01m00s");//1min ON.
 	_timer_1min_off = new timer("00d00h01m00s");//1min OFF.
 
-	_status=0;//LED is off at start.
-	_pinconfig = pin;//On what pin is the LED.
+	_status=0;//Growlight is off at start.
+	_phase = 'G';//Germination by default.
+	_pinconfig = pin;//On what pin is the Growlight.
 }
-void LED::off()
+void Growlight::off()
 {
-	_pin->high();//LED IS ON WHEN digital pin is LOW.
-	_status=0;//LED is off.
+	_pin->high();//Growlight IS ON WHEN digital pin is LOW.
+	_status=0;//Growlight is off.
 }
-void LED::on()
+void Growlight::on()
 {
-	_pin->low();//LED IS ON WHEN digital pin is LOW.
-	_status=1;//LED is on.
+	_pin->low();//Growlight IS ON WHEN digital pin is LOW.
+	_status=1;//Growlight is on.
 }
-void LED::on_1min_off_1min()
+void Growlight::on_1min_off_1min()
 {
 	if(_timer_1min_on->get_done()==0)
     {
         _timer_1min_on->run();
-        on();//LED ON.
+        on();//Growlight ON.
     }
     else if(_timer_1min_on->get_done()==1 && _timer_1min_off->get_done()==0)
     {
         _timer_1min_off->run();
-        off();//LED OFF.
+        off();//Growlight OFF.
     }
     else
     {
@@ -280,17 +362,23 @@ void LED::on_1min_off_1min()
         _timer_1min_off->reset();
     }
 }
-void LED::on_18h_off_6h()
+void Growlight::on_24h()
 {
+	_phase = 'G'; //mode Germination
+	on();
+}
+void Growlight::on_18h_off_6h()
+{
+	_phase = 'V'; //mode Vegetation
 	if(_timer_18h_on->get_done()==0)
     {
         _timer_18h_on->run();
-        on();//LED ON.
+        on();//Growlight ON.
     }
     else if(_timer_18h_on->get_done()==1 && _timer_6h_off->get_done()==0)
     {
         _timer_6h_off->run();
-        off();//LED OFF.
+        off();//Growlight OFF.
     }
     else
     {
@@ -298,8 +386,9 @@ void LED::on_18h_off_6h()
         _timer_6h_off->reset();
     }
 }
-void LED::on_12h_off_12h()
+void Growlight::on_12h_off_12h()
 {
+	_phase = 'F'; //mode flowering
 	if(_timer_12h_on->get_done()==0)
 	{
 		_timer_12h_on->run();
@@ -316,26 +405,30 @@ void LED::on_12h_off_12h()
         _timer_12h_off->reset();
     }
 }
-void LED::init()//Init.
+void Growlight::init()//Init.
 {
-	off();//LED OFF at start.
+	off();//Growlight OFF at start.
 }
-bool LED::get_status()
+bool Growlight::get_status()
 {
 	return _status;
 }
-int LED::get_pinconfig()
+char Growlight::get_phase()
+{
+	return _phase;
+}
+int Growlight::get_pinconfig()
 {
 	return _pinconfig;
 }
-void LED::toggle()
+void Growlight::toggle()
 {
 	bool current_state = _status;
-	if(current_state == 1)//If LED ON
+	if(current_state == 1)//If Growlight ON
 	{
 		off();//turn it off
 	}
-	else //If LED OFF
+	else //If Growlight OFF
 	{
 		on();//turn it on
 	}
@@ -451,188 +544,27 @@ int FAN::get_pinconfig()
 {
 	return _pinconfig;
 }
-FRONT_PANEL::FRONT_PANEL(/* Front panel leds*/
-					int FANled, int LEDled, int BULBled, int Germinationled, int Vegetationled, 
-					int Floweringled, int phase_termineeled, int dryled,
-					int moistled, int wetled, int dooropenled,
-					/*Front panel Switchs*/
-					int FANswitch, int LEDswitch, int modeaswitch, int modebswitch,
-					int BULBswitch,
-					/*LCD*/
-					int lcd_serial_port)
-{
-	//INITIATE ALL PINS TO DESIRED INITIAL CONFIG.
-	//Front Panel leds.
-	_led1 = new Digital_pin(FANled);
-	_led1->set_output();
-	_led1->init();
-	_led2 = new Digital_pin(LEDled);
-	_led2->set_output();
-	_led2->init();
-	_led3 = new Digital_pin(BULBled);
-	_led3->set_output();
-	_led3->init();
-	_led5 = new Digital_pin(Germinationled);
-	_led5->set_output();
-	_led5->init();
-	_led6 = new Digital_pin(Vegetationled);
-	_led6->set_output();
-	_led6->init();
-	_led7 = new Digital_pin(Floweringled);
-	_led7->set_output();
-	_led7->init();
-	_led8 = new Digital_pin(phase_termineeled);
-	_led8->set_output();
-	_led8->init();
-	_led9 = new Digital_pin(dryled);
-	_led9->set_output();
-	_led9->init();
-	_led10 = new Digital_pin(moistled);
-	_led10->set_output();
-	_led10->init();
-	_led11 = new Digital_pin(wetled);
-	_led11->set_output();
-	_led11->init();
-	_led13 = new Digital_pin(dooropenled);
-	_led13->set_output();
-	_led13->init();
-	//Front Panel Switchs
-	_switch1 = new Digital_pin(FANswitch);
-	_switch1->set_input();
-	_switch2 = new Digital_pin(LEDswitch);
-	_switch2->set_input();
-	_switch3a = new Digital_pin(modeaswitch);
-	_switch3a->set_input();
-	_switch3b = new Digital_pin(modebswitch);
-	_switch3b->set_input();
-	_switch4 = new Digital_pin(BULBswitch);
-	_switch4->set_input();
-	//LCD
-	_lcd_serial_port = lcd_serial_port;
-	//Switchs
-	_switch_register = 0x00;//
-}
-//leds
-void FRONT_PANEL::FAN_led_on()
-{
-	_led1->high();
-}
-void FRONT_PANEL::FAN_led_off()
-{
-	_led1->low();
-}
-void FRONT_PANEL::FAN_led_blink()
-{
-	_led1->blink();
-}
-void FRONT_PANEL::LED_led_on()
-{
-	_led2->high();
-}
-void FRONT_PANEL::LED_led_off()
-{
-	_led2->low();
-}
-void FRONT_PANEL::LED_led_blink()
-{
-	_led2->blink();
-}
-void FRONT_PANEL::BULB_led_on()
-{
-	_led3->high();
-}
-void FRONT_PANEL::BULB_led_off()
-{
-	_led3->low();
-}
-void FRONT_PANEL::BULB_led_blink()
-{
-	_led3->blink();
-}
-void FRONT_PANEL::Germination_mode()
-{
-	_led5->high();
-	_led6->low();
-	_led7->low();
-}
-void FRONT_PANEL::Vegetation_mode()
-{
-	_led5->low();
-	_led6->high();
-	_led7->low();
-}
-void FRONT_PANEL::Flowering_mode()
-{
-	_led5->low();
-	_led6->low();
-	_led7->high();
-}
-void FRONT_PANEL::phase_terminee_led_on()
-{
-	_led8->high();
-}
-void FRONT_PANEL::phase_terminee_led_off()
-{
-	_led8->low();
-}
-void FRONT_PANEL::dry()
-{
-	_led9->high();
-	_led10->low();
-	_led11->low();
-}
-void FRONT_PANEL::moist()
-{
-	_led9->low();
-	_led10->high();
-	_led11->low();
-}
-void FRONT_PANEL::wet()
-{
-	_led9->low();
-	_led10->low();
-	_led11->high();
-}
-void FRONT_PANEL::door_led_on()
-{
-	_led13->high();
-}
-void FRONT_PANEL::door_led_off()
-{
-	_led13->low();
-}
-void FRONT_PANEL::all_led_off()
-{
-	_led1->low();
-	_led2->low();
-	_led3->low();
-	_led5->low();
-	_led6->low();
-	_led7->low();
-	_led8->low();
-	_led9->low();
-	_led10->low();
-	_led11->low();
-	_led13->low();
 
+LCD::LCD(int lcd_serial_port)
+{
+	_lcd_serial_port = lcd_serial_port;
+	switch (_lcd_serial_port)
+	{
+		case 0:
+		Serial.begin(9600);
+		break;
+		case 1:
+		Serial1.begin(9600);
+		break;
+		case 2:
+		Serial2.begin(9600);
+		break;
+		case 3:
+		Serial3.begin(9600);
+		break;
+	}
 }
-void FRONT_PANEL::flash(int led_register)//Last 3 bits unused.
-{	
-	all_led_off();
-	if(led_register & 0x8000){_led1->high();}
-	if(led_register & 0x4000){_led2->high();}
-	if(led_register & 0x2000){_led3->high();}
-	if(led_register & 0x0800){_led5->high();}
-	if(led_register & 0x0400){_led6->high();}
-	if(led_register & 0x0200){_led7->high();}
-	if(led_register & 0x0100){_led8->high();}
-	if(led_register & 0x0080){_led9->high();}
-	if(led_register & 0x0040){_led10->high();}
-	if(led_register & 0x0020){_led11->high();}
-	if(led_register & 0x0008){_led13->high();}
-}
-//LCD
-void FRONT_PANEL::send_lcd(char * array)
+void LCD::send_lcd(char * array)
 {
 	switch (_lcd_serial_port)
 	{
@@ -654,286 +586,5 @@ void FRONT_PANEL::send_lcd(char * array)
 		break;
 	}
 }
-void FRONT_PANEL::display_welcome()
-{
-	delay(1000);
-	//Welcome!!! My Friend
-	send_lcd(" Welcome!!! * ");
-	delay(1000);
-	send_lcd(" Welcome!!! * M ");
-	delay(1000);
-	send_lcd(" Welcome!!! * My ");
-	delay(1000);
-	send_lcd(" Welcome!!! * My F");
-	delay(1000);
-	send_lcd(" Welcome!!! * My Fr");
-	delay(1000);
-	send_lcd(" Welcome!!! * My Fri");
-	delay(1000);
-	send_lcd(" Welcome!!! * My Frie");
-	delay(1000);
-	send_lcd(" Welcome!!! * My Frien");
-	delay(1000);
-	send_lcd(" Welcome!!! * My Friend");
-	delay(1000);
-	//GrowBox1 by Vincent Gosselin
-	send_lcd(" GrowBox1 * By ");
-	delay(5000);
-	send_lcd(" Vincent * Gosselin ");
-	delay(1000);
 
-	int uperbooster = 80; 
-	for(int y=0;y<5;y++)//Flash 20 times full panel.
-	{
-		for(int i=3; i<16; i++)
-		{
-		flash(1<<i);
-		delay(uperbooster);
-		uperbooster--;
-		}
-	}
-}
-void FRONT_PANEL::display_error()
-{
-	send_lcd(" Error! * ");
-}
-void FRONT_PANEL::display_almostdone()
-{
-	send_lcd(" Almost * Done!"); 
-}
-//Switchs
-void FRONT_PANEL::scan_switch()
-{
-	//Scan switch every 100ms to allow switch debounce.
-	unsigned long currentMillis = millis();
-	if(currentMillis - _previousMillis > 100)//Every 100ms.
-	{
-	//When SWITCH IS ON, PIN IS GROUNDED.
-	char temp = 0x00;//Temp for generation of _switch_register.
-	//Switch1.
-	if(_switch1->read_input()==0)/*Switch1 ON*/{temp = 0x80;}//1000 000X for Switch1.
-	else						/*Switch1 OFF*/{temp = 0x00;}//0000 000X for Switch1.
-	//Switch2.
-	if(_switch2->read_input()==0)/*Switch2 ON*/{temp = 0x40 | temp;}//0100 000X for Switch2.
-	else						/*Switch2 OFF*/{temp = 0x00 | temp;}//0000 000X for Switch2.
-	//Switch3a POSITION ON 24H 
-	if(_switch3a->read_input()==0 && _switch3b->read_input()==1)/*Switch3A on 24h position*/{temp = 0x20 | temp;}
-	else													/*Switch3a NOT on 24h position*/{temp = 0x00 | temp;}
-	//Switch3b POSITION ON 12h/12h
-	if(_switch3b->read_input()==0 && _switch3a->read_input()==1)/*Switch3B on 12h12h position*/{temp = 0x10 | temp;}
-	else													/*Switch3b not on 12h12h position*/{temp = 0x00 | temp;}
-	//Switch3c Position ON 16h/8h
-	if(_switch3b->read_input()==1 && _switch3a->read_input()==1)/*Switch3C on 16h8h position*/{temp = 0x08 | temp;}
-	else														/*Switch3C not on 16h8h position*/{temp = 0x00 | temp;}
-	//Switch4 
-	if(_switch4->read_input()==0)/*Switch4 ON*/{temp = 0x04 | temp;}
-	else						/*Switch4 OFF*/{temp = 0x00 | temp;}
 
-	_switch_register = temp;
-	}
-}
-char FRONT_PANEL::get_switch_register()
-{
-	return _switch_register;
-}
-void FRONT_PANEL::init()
-{
-	switch (_lcd_serial_port)
-	{
-		case 0:
-		Serial.begin(9600);
-		break;
-		case 1:
-		Serial1.begin(9600);
-		break;
-		case 2:
-		Serial2.begin(9600);
-		break;
-		case 3:
-		Serial3.begin(9600);
-		break;
-	}
-}
-SENSORS::SENSORS(int soil_moisture_pin, int temp_humidity_pin, int door_sensor_pin)
-{
-	_soil_moisture_sensor = new analog_pin(soil_moisture_pin);
-	_temp_humidity_sensor = new DHT(temp_humidity_pin, 11);
-	_door_sensor = new analog_pin(door_sensor_pin);
-	_previousMillis = 0;//yess
-	_previousMillis1 = 0;//Uhhh, yes I guess.
-	_soil_moisture = 0;
-	_temperature = 0;
-	_humidity= 0;// Add ,0 for no decimal!
-	_door = 0;//Adc value boy!
-}
-void SENSORS::scan_soil_moisture()
-{
-	unsigned long currentMillis = millis();
-	if(currentMillis - _previousMillis1 > 1000)//Once every 1 sec.
-	{
-	_previousMillis1 = currentMillis;
-	_soil_moisture = _soil_moisture_sensor->read_adc();
-	}
-}
-int SENSORS::get_soil_moisture()
-{
-	return _soil_moisture;
-}
-void SENSORS::scan_temp_humidity()
-{
-	unsigned long currentMillis = millis();
-	if(currentMillis- _previousMillis>1000)//once every 1sec.
-	{
-	_previousMillis = currentMillis;
-	_temperature = _temp_humidity_sensor->readTemperature();
-	_humidity = _temp_humidity_sensor->readHumidity();
-	}
-}
-float SENSORS::get_temp()
-{
-	return _temperature;
-}
-float SENSORS::get_humidity()
-{
-	return _humidity;
-}
-void SENSORS::scan_door()
-{
-	_door = _door_sensor->read_adc();
-}
-int SENSORS::get_door()
-{
-	return _door;
-}
-SERVER::SERVER(int nano_internet_pin)
-{
-	_Global_timer = new timer("28d00h00m00s");//Thats right init it that way dawg.
-	_phase = 'G';//Default
-	_data = new char[500];//Thats right, nice big fatt array.
-	_nano_internet_pin = nano_internet_pin;
-	_previousMillis = 0;
-}
-void SERVER::Global_timer_run()
-{
-	if(_Global_timer->get_done()==0) 
-	{
-		_Global_timer->run();
-	}
-}
-void SERVER::Global_timer_reset()
-{
-	switch (_phase)
-	{
-		case 'G':
-		_Global_timer->init("28d00h00m00s");
-		break;
-		case 'V':
-		_Global_timer->init("30d00h00m00s");
-		break;
-		case 'F':
-		_Global_timer->init("40d00h00m00s");
-		break;
-	}
-}
-void SERVER::set_phase(char p)
-{
-	_phase = p;
-}
-char SERVER::get_phase()
-{
-	return _phase;
-}
-char * SERVER::get_Global_timer()
-{
-	return _Global_timer->get_count_string();
-}
-void SERVER::Store_data(/* Components */
-						bool FAN_intake, bool FAN_outake, bool LED, bool BULB,
-						/* Sensors */
-						int soil_moisture, float temp, float humidity, int door)
-{
-	
-	/*First One.*/strncpy(_data,"FAN_intake is ",sizeof("FAN_intake is ")); if(FAN_intake == 1) {strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
-	/*The rest.*/	strcat(_data, " FAN_outake is ");						if(FAN_outake == 1)	{strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
-					strcat(_data, " LED is ");						if(LED == 1)	{strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
-					strcat(_data, " BULB is ");						if(BULB == 1)	{strcat(_data,"ON ,");} else strcat(_data,"OFF ,");
-
-	/*Bunch of sensors*/
-					/*Moisture sensor*/ 
-					String str;
-					char array[5];
-					str = String(soil_moisture);
-					str.toCharArray(array,5);
-					strcat(_data, " soil_moisture is ");strcat(_data, array);strcat(_data, " ,");	
-					/*Temperature*/
-					String str1;
-					char array1[3];
-					str1 = String(temp);
-					str1.toCharArray(array1,3);
-					strcat(_data, " Temperature is ");strcat(_data, array1);strcat(_data, "oC ,");
-					/*Humidity*/
-					String str2;
-					char array2[3];
-					str2 = String(humidity);
-					str2.toCharArray(array2,3);
-					strcat(_data, " Humidity is ");strcat(_data, array2);strcat(_data, "% ,");
-					/*Door sensor*/
-					String str3;
-					char array3[5];
-					str3 = String(door);
-					str3.toCharArray(array3,5);
-					strcat(_data, " Door is ");strcat(_data, array3);strcat(_data, " ,");
-}
-char * SERVER::get_data()
-{
-	return _data;
-}
-void SERVER::Send_data_internet()
-{
-	unsigned long currentMillis = millis();
-	if(currentMillis - _previousMillis > 5000)
-	{
-		_previousMillis = currentMillis;
-		switch (_nano_internet_pin)
-		{
-			case 0:
-			Serial.print("START : ");
-			Serial.print(_data);
-			Serial.print(" END\r\n");
-			break;
-			case 1:
-			Serial1.print("START : ");
-			Serial1.print(_data);
-			Serial1.print(" END\r\n");
-			break;
-			case 2:
-			Serial2.print("START : ");
-			Serial2.print(_data);
-			Serial2.print(" END\r\n");
-			break;
-			case 3:
-			Serial3.print("START : ");
-			Serial3.print(_data);
-			Serial3.print(" END\r\n");
-			break;
-		}
-	}
-}
-void SERVER::init()
-{
-	switch (_nano_internet_pin)
-	{
-		case 0:
-		Serial.begin(9600);
-		break;
-		case 1:
-		Serial1.begin(9600);
-		break;
-		case 2:
-		Serial2.begin(9600);
-		break;
-		case 3:
-		Serial3.begin(9600);
-		break;
-	}
-}
