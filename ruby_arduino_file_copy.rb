@@ -9,9 +9,9 @@
 
 
 #Source
-growbox1_arduinodue_cpp = File.readlines("/Users/vincentgosselin/Desktop/growbox_technologies/Growbox1_software/Growbox1/growbox1_arduinodue.cpp")
-library_cpp = File.readlines("/Users/vincentgosselin/Desktop/growbox_technologies/Growbox1_software/Growbox1/GROWBOX1.cpp")
-library_h = File.readlines("/Users/vincentgosselin/Desktop/growbox_technologies/Growbox1_software/Growbox1/GROWBOX1.h")
+growbox1_arduinodue_cpp = File.readlines("/Users/vincentgosselin/Desktop/growbox_technologies/Growbox1/Growbox1_software/Growbox1/growbox1_arduinodue.cpp")
+library_cpp = File.readlines("/Users/vincentgosselin/Desktop/growbox_technologies/Growbox1/Growbox1_software/Growbox1/GROWBOX1.cpp")
+library_h = File.readlines("/Users/vincentgosselin/Desktop/growbox_technologies/Growbox1/Growbox1_software/Growbox1/GROWBOX1.h")
 
 #Destination files
 path_to_growbox1_arduinodue_ino_file = "/Users/vincentgosselin/Documents/Arduino/growbox1_arduinodue/growbox1_arduinodue.ino"

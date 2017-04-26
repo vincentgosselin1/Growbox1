@@ -53,7 +53,7 @@ class Switch
 		bool get_status();// 0 -> ON, 1 -> OFF.
 	private:
 	Digital_pin *_pin;//Digital_pin object.
-	bool _status;	
+	bool _status;
 };
 class Switch3WAY
 {

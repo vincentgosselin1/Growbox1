@@ -106,6 +106,14 @@ Switch::Switch(int pin)
 void Switch::listen()
 {
 	bool status = _pin->read_input();// ON is 0 (Grounded), OFF is 1 (OPEN)
+	//The following is to avoid the switch bouncing.
+	if(_status != status)
+	{
+		//Wait for switch to debounce.
+		delay(500);
+		//Another reading since oscillation is done.
+		status = _pin->read_input();
+	}
 	_status = status;
 }
 bool Switch::get_status()
