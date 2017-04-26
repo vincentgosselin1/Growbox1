@@ -290,9 +290,7 @@ void timer::run()
 		{
 			//Count my dear.
  			_count--;
- 			_previousMillis=currentMillis;
- 			//print to serial
- 			serialprint();            
+ 			_previousMillis=currentMillis;            
 		}
 		else;//do nothing.
 	}

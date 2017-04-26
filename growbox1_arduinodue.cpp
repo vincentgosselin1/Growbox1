@@ -1,9 +1,52 @@
 #include <GROWBOX1.h>
+#include <arduinoduedht11.h>
 //Growbox1_arduinodue Software by Vincent Gosselin, copyright 2016.	
 
 //Last update : 1st of January 2017
 
 //Minimal viable product.
+
+//smartWait utility, NEED to think about it.
+unsigned long previousMillis0 = 0;
+unsigned long previousMillis1 = 0;
+bool smartWait0(int ms){
+		unsigned long currentMillis = millis();
+		//Condition to break overflow that happens after 50days when previousmillis is greater than currentmillis.
+		if(previousMillis0 > currentMillis)
+		{
+			previousMillis0 = 0;
+			return 0;
+		}
+		//If diffence is greater then ms.
+		if(currentMillis - previousMillis0 >= ms) {
+ 			previousMillis0 = currentMillis;
+ 			//One second is now done.
+ 			return 1;            
+		} 
+		else {
+			//One second did not passed.
+			return 0;
+		}
+}
+bool smartWait1(int ms){
+		unsigned long currentMillis = millis();
+		//Condition to break overflow that happens after 50days when previousmillis is greater than currentmillis.
+		if(previousMillis1 > currentMillis)
+		{
+			previousMillis1 = 0;
+			return 0;
+		}
+		//If diffence is greater then ms.
+		if(currentMillis - previousMillis1 >= ms) {
+ 			previousMillis1 = currentMillis;
+ 			//One second is now done.
+ 			return 1;            
+		} 
+		else {
+			//One second did not passed.
+			return 0;
+		}
+}
 
 //ALL CLASSES ARE FROM GROWBOX1.
 
@@ -38,12 +81,16 @@ led trempeeled(28);
 led reservoirled(26);
 led doorled(24);
 
+//Sensors
+dht11 dht11(2);//DHT11 object. PIN to attach to DHT11, here PIN2.
+
 //Growbox1 Functions
 void initiate();
 void display_front_panel();
 void listen_for_manual_commands();
 void execute_manual_commands();
 void display_welcome();
+void send_data_serial();
 
 
 //Pin config goes here.
@@ -56,7 +103,20 @@ void loop()
 	//Based on new state machine from January 3rd 2017.
 	display_front_panel();
 	listen_for_manual_commands();
-	execute_manual_commands();	
+	execute_manual_commands();
+
+	//Test DHT11
+	if(smartWait0(10000)) {
+  		dht11.scan();
+  	}
+  	if (smartWait1(1000)) {
+  		send_data_serial(); 
+  	}
+	// if(smartWait0(1000)) {
+ //  		Serial.print("Hello");
+ //  	}
+
+  	
 }
 
 void initiate()
@@ -71,6 +131,32 @@ void initiate()
 	FAN_OUTTAKE.init();
 	//LCD message
 	display_welcome();	
+}
+void send_data_serial()
+{
+	//Once every 10sec
+	Serial.println("Start");
+	Serial.print("Humidity is ->");			Serial.print(dht11.get_humidity(),DEC); 	Serial.println("%<-");
+	Serial.print("Temperature is ->"); 		Serial.print(dht11.get_temperature(),DEC);	Serial.println("oC<-");
+	Serial.print("Growlight is ->"); 
+		if(Growlight.get_status()==1){ 
+			Serial.print("ON");	Serial.println("<-"); 
+		} else {
+			Serial.print("OFF");	Serial.println("<-");
+		}
+	Serial.print("Growlight timer is for ->"); 	Serial.print(Growlight.get_phase());	Serial.println("<-");
+		if(FAN_INTAKE.get_status()==1){ 
+			Serial.print("Fan Intake is ->ON");	Serial.println("<-"); 
+		} else {
+			Serial.print("Fan Intake is ->OFF");	Serial.println("<-");
+		}
+		if(FAN_OUTTAKE.get_status()==1){ 
+			Serial.print("Fan Outtake is ->ON");	Serial.println("<-"); 
+		} else {
+			Serial.print("Fan Outtake is ->OFF");	Serial.println("<-");
+		}
+	Serial.println("End");	
+
 }
 void display_welcome()
 {
