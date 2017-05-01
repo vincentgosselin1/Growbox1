@@ -1,52 +1,15 @@
 #include <GROWBOX1.h>
 #include <arduinoduedht11.h>
+#include <arduinotools.h>
 //Growbox1_arduinodue Software by Vincent Gosselin, copyright 2016.	
 
 //Last update : 1st of January 2017
 
 //Minimal viable product.
 
-//smartWait utility, NEED to think about it.
-unsigned long previousMillis0 = 0;
-unsigned long previousMillis1 = 0;
-bool smartWait0(int ms){
-		unsigned long currentMillis = millis();
-		//Condition to break overflow that happens after 50days when previousmillis is greater than currentmillis.
-		if(previousMillis0 > currentMillis)
-		{
-			previousMillis0 = 0;
-			return 0;
-		}
-		//If diffence is greater then ms.
-		if(currentMillis - previousMillis0 >= ms) {
- 			previousMillis0 = currentMillis;
- 			//One second is now done.
- 			return 1;            
-		} 
-		else {
-			//One second did not passed.
-			return 0;
-		}
-}
-bool smartWait1(int ms){
-		unsigned long currentMillis = millis();
-		//Condition to break overflow that happens after 50days when previousmillis is greater than currentmillis.
-		if(previousMillis1 > currentMillis)
-		{
-			previousMillis1 = 0;
-			return 0;
-		}
-		//If diffence is greater then ms.
-		if(currentMillis - previousMillis1 >= ms) {
- 			previousMillis1 = currentMillis;
- 			//One second is now done.
- 			return 1;            
-		} 
-		else {
-			//One second did not passed.
-			return 0;
-		}
-}
+//From arduinotools.h
+SmartWait smartWait0;
+SmartWait smartWait1;
 
 //ALL CLASSES ARE FROM GROWBOX1.
 
@@ -105,16 +68,15 @@ void loop()
 	listen_for_manual_commands();
 	execute_manual_commands();
 
-	//Test DHT11
-	if(smartWait0(10000)) {
+	//Every 10 secs.
+	if(smartWait0.wait(10000)) {
   		dht11.scan();
   	}
-  	if (smartWait1(1000)) {
+
+  	//Every 1 sec.
+  	if (smartWait1.wait(1000)) {
   		send_data_serial(); 
   	}
-	// if(smartWait0(1000)) {
- //  		Serial.print("Hello");
- //  	}
 
   	
 }
