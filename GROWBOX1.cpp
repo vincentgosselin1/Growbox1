@@ -554,21 +554,22 @@ int FAN::get_pinconfig()
 LCD::LCD(int lcd_serial_port)
 {
 	_lcd_serial_port = lcd_serial_port;
-	switch (_lcd_serial_port)
-	{
-		case 0:
-		Serial.begin(9600);
-		break;
-		case 1:
-		Serial1.begin(9600);
-		break;
-		case 2:
-		Serial2.begin(9600);
-		break;
-		case 3:
-		Serial3.begin(9600);
-		break;
-	}
+	//Cannot be put before setup() function.
+	// switch (_lcd_serial_port)
+	// {
+	// 	case 0:
+	// 	Serial.begin(9600);
+	// 	break;
+	// 	case 1:
+	// 	Serial1.begin(9600);
+	// 	break;
+	// 	case 2:
+	// 	Serial2.begin(9600);
+	// 	break;
+	// 	case 3:
+	// 	Serial3.begin(9600);
+	// 	break;
+	// }
 }
 void LCD::send_lcd(char * array)
 {
