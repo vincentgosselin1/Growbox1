@@ -1,5 +1,5 @@
 #include <GROWBOX1.h>
-//#include <arduinoduedht11.h>
+#include <arduinodue_dht22library.h>
 #include <arduinotools.h>
 //Growbox1_arduinodue Software by Vincent Gosselin, copyright 2016.	
 
@@ -45,8 +45,7 @@ led reservoirled(26);
 led doorled(24);
 
 //Sensors
-//TO DO, change to dht22 + modify library to prevent program from blocking.
-//dht11 dht11(2);//DHT11 object. PIN to attach to DHT11, here PIN2.
+dht22 dht22(2);//PIN 2.
 
 //Growbox1 Functions
 void initiate();
@@ -69,13 +68,31 @@ void loop()
 	listen_for_manual_commands();
 	execute_manual_commands();
 
-	// //Every 10 secs.
-	// if(smartWait0.wait(10000)) {
- //  		dht11.scan();
- //  	}
+	//Every 10 secs.
+	if(smartWait0.wait(10000)) {
+
+		//dht22 temp+humidity scan.
+  		dht22.scan();
+
+  		float air_humidity = dht22.get_humidity();
+  		float air_temperature = dht22.get_temperature();
+
+  		char air_humidity_string[15] = {0};
+  		dtostrf(air_humidity,4, 1, air_humidity_string);
+
+		char air_temperature_string[15] = {0};
+		dtostrf(air_temperature,4, 1, air_temperature_string);
+
+		//string to send
+    	char string[100];
+		sprintf(string, "Temperature %s * Humidity %s", air_temperature_string, air_humidity_string);
+		LCD.send_lcd(string);
+
+		//LCD.send_lcd("Temperature is %soC * Humidity is %s\%RH",air_temperature_string,air_humidity_string);
+  	}
 
   	//Every 1 sec.
-  	if (smartWait1.wait(1000)) {
+  	if (smartWait1.wait(10000)) {
   		send_data_serial(); 
   	}
 
@@ -103,8 +120,8 @@ void send_data_serial()
 	Serial.println("Start");
 	// Serial.print("Humidity is ->");			Serial.print(dht11.get_humidity(),DEC); 	Serial.println("%<-");
 	// Serial.print("Temperature is ->"); 		Serial.print(dht11.get_temperature(),DEC);	Serial.println("oC<-");
-	Serial.print("Humidity is ->");			Serial.print(20); 	Serial.println("%<-");
-	Serial.print("Temperature is ->"); 		Serial.print(35);	Serial.println("oC<-");
+	Serial.print("Humidity is ->");			Serial.print(dht22.get_humidity()); 	Serial.println("%<-");
+	Serial.print("Temperature is ->"); 		Serial.print(dht22.get_temperature());	Serial.println("oC<-");
 	Serial.print("Growlight is ->"); 
 		if(Growlight.get_status()==1){ 
 			Serial.print("ON");	Serial.println("<-"); 
@@ -170,7 +187,7 @@ void execute_manual_commands()
 		{
 			Growlight.on_12h_off_12h();
 		}
-		else if(Growlightphaseswitch.get_position() == 'C')// postion B is for Vegetation mode (18h/6h).
+		else if(Growlightphaseswitch.get_position() == 'C')// postion C is for Vegetation mode (18h/6h).
 		{
 			Growlight.on_18h_off_6h();
 		}
